@@ -1,4 +1,4 @@
-/* RESET */
+
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +14,6 @@ body {
     color: white;
 }
 
-/* HEADER */
 header {
     text-align: center;
     padding: 60px 20px 30px;
@@ -30,7 +29,7 @@ header p {
     opacity: 0.9;
 }
 
-/* MENU */
+
 .menu {
     width: 90%;
     max-width: 900px;
@@ -41,7 +40,7 @@ header p {
     padding: 20px;
 }
 
-/* KARTY */
+
 .card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
