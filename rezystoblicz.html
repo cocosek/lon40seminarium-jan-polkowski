@@ -2,21 +2,21 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Kalkulator kodu paskowego rezystora (5 pasków)</title>
+<title>Kalkulator rezystora 5-paskowego</title>
 
 <style>
 
 body{
 font-family:Arial;
 text-align:center;
-background:#f5f5f5;
+background:#f2f2f2;
 }
 
 .rezystor{
 display:flex;
 align-items:center;
 justify-content:center;
-margin-top:50px;
+margin-top:60px;
 }
 
 .przewod{
@@ -26,7 +26,7 @@ background:#777;
 }
 
 .korpus{
-width:320px;
+width:340px;
 height:70px;
 background:#e6d3a3;
 border-radius:12px;
@@ -38,8 +38,8 @@ align-items:center;
 .pasek{
 width:18px;
 height:70px;
-cursor:pointer;
 border:1px solid #333;
+cursor:pointer;
 }
 
 #wynik{
@@ -49,9 +49,9 @@ font-weight:bold;
 }
 
 select{
-margin-top:20px;
-font-size:16px;
-padding:5px;
+position:absolute;
+display:none;
+font-size:14px;
 }
 
 </style>
@@ -60,7 +60,7 @@ padding:5px;
 <body>
 
 <h2>Kalkulator kodu paskowego rezystora (5 pasków)</h2>
-<p>Kliknij pasek aby zmienić kolor</p>
+<p>Kliknij pasek aby wybrać kolor</p>
 
 <div class="rezystor">
 
@@ -68,11 +68,11 @@ padding:5px;
 
 <div class="korpus">
 
-<div class="pasek" id="p1"></div>
-<div class="pasek" id="p2"></div>
-<div class="pasek" id="p3"></div>
-<div class="pasek" id="p4"></div>
-<div class="pasek" id="p5"></div>
+<div class="pasek"></div>
+<div class="pasek"></div>
+<div class="pasek"></div>
+<div class="pasek"></div>
+<div class="pasek"></div>
 
 </div>
 
@@ -80,10 +80,7 @@ padding:5px;
 
 </div>
 
-<br>
-
-<select id="kolory">
-
+<select id="menuKolorow">
 <option value="#000000">Czarny</option>
 <option value="#8B4513">Brązowy</option>
 <option value="#FF0000">Czerwony</option>
@@ -96,7 +93,6 @@ padding:5px;
 <option value="#FFFFFF">Biały</option>
 <option value="#FFD700">Złoty</option>
 <option value="#C0C0C0">Srebrny</option>
-
 </select>
 
 <div id="wynik">Rezystancja: -</div>
@@ -104,12 +100,11 @@ padding:5px;
 <script>
 
 const paski = document.querySelectorAll(".pasek");
-const wyborKoloru = document.getElementById("kolory");
+const menu = document.getElementById("menuKolorow");
 
-let wybranyPasek = null;
+let aktywnyPasek = null;
 
 const cyfry = {
-
 "#000000":0,
 "#8b4513":1,
 "#ff0000":2,
@@ -120,11 +115,9 @@ const cyfry = {
 "#800080":7,
 "#808080":8,
 "#ffffff":9
-
 };
 
 const mnozniki = {
-
 "#000000":1,
 "#8b4513":10,
 "#ff0000":100,
@@ -134,11 +127,9 @@ const mnozniki = {
 "#0000ff":1000000,
 "#ffd700":0.1,
 "#c0c0c0":0.01
-
 };
 
 const tolerancje = {
-
 "#8b4513":"±1%",
 "#ff0000":"±2%",
 "#008000":"±0.5%",
@@ -147,26 +138,31 @@ const tolerancje = {
 "#808080":"±0.05%",
 "#ffd700":"±5%",
 "#c0c0c0":"±10%"
-
 };
 
-paski.forEach(p=>{
+paski.forEach(pasek=>{
 
-p.style.background="#000000";
+pasek.style.background="#000000";
 
-p.addEventListener("click",()=>{
+pasek.addEventListener("click",(e)=>{
 
-wybranyPasek=p;
+aktywnyPasek=pasek;
+
+menu.style.display="block";
+menu.style.left=e.pageX+"px";
+menu.style.top=e.pageY+"px";
 
 });
 
 });
 
-wyborKoloru.addEventListener("change",()=>{
+menu.addEventListener("change",()=>{
 
-if(wybranyPasek){
+if(aktywnyPasek){
 
-wybranyPasek.style.background=wyborKoloru.value;
+aktywnyPasek.style.background=menu.value;
+
+menu.style.display="none";
 
 oblicz();
 
@@ -176,18 +172,17 @@ oblicz();
 
 function oblicz(){
 
-const b1 = cyfry[hex(paski[0].style.background)];
-const b2 = cyfry[hex(paski[1].style.background)];
-const b3 = cyfry[hex(paski[2].style.background)];
+const b1=cyfry[hex(paski[0].style.background)] || 0;
+const b2=cyfry[hex(paski[1].style.background)] || 0;
+const b3=cyfry[hex(paski[2].style.background)] || 0;
 
-const mnoznik = mnozniki[hex(paski[3].style.background)] || 1;
+const mnoznik=mnozniki[hex(paski[3].style.background)] || 1;
+const tolerancja=tolerancje[hex(paski[4].style.background)] || "";
 
-const tolerancja = tolerancje[hex(paski[4].style.background)] || "";
-
-const wartosc = ((b1*100)+(b2*10)+b3) * mnoznik;
+const wartosc=((b1*100)+(b2*10)+b3)*mnoznik;
 
 document.getElementById("wynik").innerText =
-"Rezystancja: " + wartosc + " Ω " + tolerancja;
+"Rezystancja: "+wartosc+" Ω "+tolerancja;
 
 }
 
@@ -195,7 +190,7 @@ function hex(rgb){
 
 if(rgb.startsWith("#")) return rgb.toLowerCase();
 
-const r = rgb.match(/\d+/g);
+const r=rgb.match(/\d+/g);
 
 if(!r) return "#000000";
 
