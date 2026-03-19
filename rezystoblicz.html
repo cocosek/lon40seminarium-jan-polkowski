@@ -207,9 +207,11 @@ function init(rezId, typ, wynikId){
   [...cyf, mnoz, tol].forEach(p=>{
     p.style.background="#000000";
 
-    p.onclick=(e)=>{
-      aktywnyPasek=p;
-      aktualnaFunkcjaOblicz=oblicz;
+   p.onclick=(e)=>{
+  aktywnyPasek=p;
+  aktualnaFunkcjaOblicz=oblicz;
+
+  menu.value = ""; // 🔥 reset wyboru (naprawia czarny)
 
       if(p===tol) ustawMenu(koloryTolerancji);
       else ustawMenu(wszystkieKolory);
