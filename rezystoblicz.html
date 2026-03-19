@@ -14,11 +14,7 @@ body{
 .rezystor-container{
   margin:60px auto;
 }
-.mnoznik{
-  left:20px:
-}
 
-  
 .rezystor{
   display:flex;
   align-items:center;
@@ -37,24 +33,22 @@ body{
   height:70px;
   background:#e6d3a3;
   border-radius:12px;
-  align-items:center;
   padding:0 10px;
   display:flex;
+  align-items:center;
 }
 
 .korpus .cyfry{
   display:flex;
-  gap:50px; /* mały odstęp między cyframi */
+  gap:50px;
 }
 
 .korpus .mnoznik{
-  display:flex;
-  margin-left:80px; /* mała przerwa od cyfr */
+  margin-left:80px;
 }
 
 .korpus .tolerancja{
-  display:flex;
-  margin-left:80px; /* większa przerwa od mnożnika, żeby oddzielić tolerancję */
+  margin-left:80px;
 }
 
 .pasek{
@@ -88,9 +82,9 @@ select{
 <h2>Kalkulator kodu paskowego rezystora</h2>
 <p>Kliknij pasek aby wybrać kolor</p>
 
-<!-- REZYSTOR 5-PASKOWY -->
+<!-- 5 pasków -->
 <div class="rezystor-container">
-  <img src="zdjecia/zdjecierez5pas.png" alt="5-paskowy rezystor">
+  <img src="zdjecia/zdjecierez5pas.png">
   <div class="rezystor" id="rezystor5">
     <div class="przewod"></div>
     <div class="korpus">
@@ -111,9 +105,9 @@ select{
   <div id="wynik5">Rezystancja 5-paskowego: -</div>
 </div>
 
-<!-- REZYSTOR 4-PASKOWY -->
+<!-- 4 paski -->
 <div class="rezystor-container">
-  <img src="zdjecia/zdjecierez4pas.png" alt="4-paskowy rezystor">
+  <img src="zdjecia/zdjecierez4pas.png">
   <div class="rezystor" id="rezystor4">
     <div class="przewod"></div>
     <div class="korpus">
@@ -166,7 +160,7 @@ const tolerancje = {
 let aktywnyPasek = null;
 const menu = document.getElementById("menuKolorow");
 
-function initRezystor(rezystorId, typ="5", wynikId){
+function initRezystor(rezystorId, typ, wynikId){
   const cyfryPaski = document.querySelectorAll(`#${rezystorId} .cyfry .pasek`);
   const mnoznikPaski = document.querySelectorAll(`#${rezystorId} .mnoznik .pasek`);
   const tolerancjaPaski = document.querySelectorAll(`#${rezystorId} .tolerancja .pasek`);
@@ -183,23 +177,40 @@ function initRezystor(rezystorId, typ="5", wynikId){
   });
 
   function oblicz() {
-    let wartosc, tolerancjaStr="";
+    let wartosc, tolerancjaStr="", tolerancjaProc=0;
+
     if(typ==="5") {
       const b1=cyfry[hex(cyfryPaski[0].style.background)] || 0;
       const b2=cyfry[hex(cyfryPaski[1].style.background)] || 0;
       const b3=cyfry[hex(cyfryPaski[2].style.background)] || 0;
       const mnoznik=mnozniki[hex(mnoznikPaski[0].style.background)] || 1;
+
       tolerancjaStr = tolerancje[hex(tolerancjaPaski[0].style.background)] || "";
       wartosc = ((b1*100)+(b2*10)+b3)*mnoznik;
+
     } else { 
       const b1=cyfry[hex(cyfryPaski[0].style.background)] || 0;
       const b2=cyfry[hex(cyfryPaski[1].style.background)] || 0;
       const mnoznik=mnozniki[hex(mnoznikPaski[0].style.background)] || 1;
+
       tolerancjaStr = tolerancje[hex(tolerancjaPaski[0].style.background)] || "";
       wartosc = (b1*10 + b2)*mnoznik;
     }
+
+    if(tolerancjaStr){
+      tolerancjaProc = parseFloat(tolerancjaStr.replace("±","").replace("%","")) / 100;
+    }
+
+    let min = wartosc;
+    let max = wartosc;
+
+    if(tolerancjaProc){
+      min = wartosc * (1 - tolerancjaProc);
+      max = wartosc * (1 + tolerancjaProc);
+    }
+
     document.getElementById(wynikId).innerText =
-      `Rezystancja ${typ}-paskowego: ${wartosc} Ω ${tolerancjaStr}`;
+      `Rezystancja ${typ}-paskowego: ${wartosc} Ω ${tolerancjaStr} (${Math.round(min)} Ω – ${Math.round(max)} Ω)`;
   }
 
   menu.addEventListener("change", ()=>{
