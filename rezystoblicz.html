@@ -64,15 +64,9 @@ body{
   font-weight:bold;
 }
 
-img{
-  max-width:400px;
-  margin-bottom:10px;
-}
-
 select{
   position:absolute;
   display:none;
-  font-size:14px;
 }
 </style>
 </head>
@@ -80,10 +74,9 @@ select{
 <body>
 
 <h2>Kalkulator rezystora</h2>
-<p>Kliknij pasek</p>
 
+<!-- 5 pasków -->
 <div class="rezystor-container">
-  <img src="zdjecia/zdjecierez5pas.png">
   <div class="rezystor" id="rezystor5">
     <div class="przewod"></div>
     <div class="korpus">
@@ -100,8 +93,8 @@ select{
   <div id="wynik5">-</div>
 </div>
 
+<!-- 4 paski -->
 <div class="rezystor-container">
-  <img src="zdjecia/zdjecierez4pas.png">
   <div class="rezystor" id="rezystor4">
     <div class="przewod"></div>
     <div class="korpus">
@@ -120,7 +113,7 @@ select{
 <select id="menuKolorow"></select>
 
 <script>
-// --- dane ---
+// ===== MAPY =====
 const cyfry = {
   "#000000":0,"#8b4513":1,"#ff0000":2,"#ffa500":3,"#ffff00":4,
   "#008000":5,"#0000ff":6,"#800080":7,"#808080":8,"#ffffff":9
@@ -135,6 +128,7 @@ const tolerancje = {
   "#8b4513":"±1%","#ff0000":"±2%","#ffd700":"±5%","#c0c0c0":"±10%"
 };
 
+// ===== KOLORY =====
 const wszystkieKolory = [
   ["#000000","Czarny"],["#8B4513","Brązowy"],["#FF0000","Czerwony"],
   ["#FFA500","Pomarańczowy"],["#FFFF00","Żółty"],["#008000","Zielony"],
@@ -143,15 +137,17 @@ const wszystkieKolory = [
 ];
 
 const koloryTolerancji = [
-  ["#8B4513","Brązowy"],["#FF0000","Czerwony"],
-  ["#FFD700","Złoty"],["#C0C0C0","Srebrny"]
+  ["#8B4513","Brązowy"],
+  ["#FF0000","Czerwony"],
+  ["#FFD700","Złoty"],
+  ["#C0C0C0","Srebrny"]
 ];
 
 let aktywnyPasek = null;
-let aktualnaFunkcjaOblicz = null;
+let aktualnaFunkcja = null;
 const menu = document.getElementById("menuKolorow");
 
-// --- helpery ---
+// ===== FUNKCJE =====
 function ustawMenu(lista){
   menu.innerHTML="";
   lista.forEach(k=>{
@@ -162,56 +158,60 @@ function ustawMenu(lista){
   });
 }
 
-function formatujOhmy(v){
+function hex(rgb){
+  const m = rgb.match(/\d+/g);
+  return "#"+[m[0],m[1],m[2]]
+    .map(x=>parseInt(x).toString(16).padStart(2,"0"))
+    .join("");
+}
+
+function kolor(el){
+  return hex(getComputedStyle(el).backgroundColor);
+}
+
+function format(v){
   if(v>=1e6) return (v/1e6).toFixed(2).replace(/\.00$/,"")+" MΩ";
   if(v>=1e3) return (v/1e3).toFixed(2).replace(/\.00$/,"")+" kΩ";
   return v+" Ω";
 }
 
-function hex(rgb){
-  if(rgb.startsWith("#")) return rgb.toLowerCase();
-  const r=rgb.match(/\d+/g);
-  return "#"+((1<<24)+(r[0]<<16)+(r[1]<<8)+(+r[2])).toString(16).slice(1);
-}
+// ===== INIT =====
+function init(id, typ, wynik){
+  const cyf = document.querySelectorAll(`#${id} .cyfry .pasek`);
+  const mnoz = document.querySelector(`#${id} .mnoznik .pasek`);
+  const tol = document.querySelector(`#${id} .tolerancja .pasek`);
 
-// --- inicjalizacja ---
-function init(rezId, typ, wynikId){
-  const cyf = document.querySelectorAll(`#${rezId} .cyfry .pasek`);
-  const mnoz = document.querySelector(`#${rezId} .mnoznik .pasek`);
-  const tol = document.querySelector(`#${rezId} .tolerancja .pasek`);
-
-  function oblicz(){
-    let val, tolStr="", p=0;
+  function licz(){
+    let val=0;
 
     if(typ==="5"){
-      val=((cyfry[hex(cyf[0].style.background)]||0)*100+
-           (cyfry[hex(cyf[1].style.background)]||0)*10+
-           (cyfry[hex(cyf[2].style.background)]||0))*
-           (mnozniki[hex(mnoz.style.background)]||1);
+      val=((cyfry[kolor(cyf[0])]||0)*100+
+           (cyfry[kolor(cyf[1])]||0)*10+
+           (cyfry[kolor(cyf[2])]||0))*
+           (mnozniki[kolor(mnoz)]||1);
     }else{
-      val=((cyfry[hex(cyf[0].style.background)]||0)*10+
-           (cyfry[hex(cyf[1].style.background)]||0))*
-           (mnozniki[hex(mnoz.style.background)]||1);
+      val=((cyfry[kolor(cyf[0])]||0)*10+
+           (cyfry[kolor(cyf[1])]||0))*
+           (mnozniki[kolor(mnoz)]||1);
     }
 
-    tolStr=tolerancje[hex(tol.style.background)]||"";
+    const tolStr=tolerancje[kolor(tol)]||"";
+    let p=0;
     if(tolStr) p=parseFloat(tolStr.replace("±",""))/100;
 
     const min=Math.round(val*(1-p));
     const max=Math.round(val*(1+p));
 
-    document.getElementById(wynikId).innerText=
-      `${formatujOhmy(val)} ${tolStr} (${formatujOhmy(min)} – ${formatujOhmy(max)})`;
+    document.getElementById(wynik).innerText=
+      `${format(val)} ${tolStr} (${format(min)} – ${format(max)})`;
   }
 
   [...cyf, mnoz, tol].forEach(p=>{
     p.style.background="#000000";
 
-   p.onclick=(e)=>{
-  aktywnyPasek=p;
-  aktualnaFunkcjaOblicz=oblicz;
-
-  menu.value = ""; 
+    p.onclick=(e)=>{
+      aktywnyPasek=p;
+      aktualnaFunkcja=licz;
 
       if(p===tol) ustawMenu(koloryTolerancji);
       else ustawMenu(wszystkieKolory);
@@ -223,12 +223,12 @@ function init(rezId, typ, wynikId){
   });
 }
 
-
+// ===== MENU EVENT =====
 menu.addEventListener("change", ()=>{
   if(aktywnyPasek){
     aktywnyPasek.style.background=menu.value;
     menu.style.display="none";
-    if(aktualnaFunkcjaOblicz) aktualnaFunkcjaOblicz();
+    aktualnaFunkcja();
   }
 });
 
